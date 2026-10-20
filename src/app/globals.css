@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light dark;
+
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
+  --bg-app: light-dark(#f8fafc, #09090b);
+  --bg-surface: light-dark(#ffffff, #121215);
+  --bg-elevated: light-dark(#f1f5f9, #1c1c21);
+  --border-subtle: light-dark(#e2e8f0, #27272a);
+  --text-primary: light-dark(#0f172a, #fafafa);
+  --text-secondary: light-dark(#475569, #a1a1aa);
+  --text-muted: light-dark(#64748b, #71717a);
+  --accent-primary: light-dark(#4f46e5, #6366f1);
+  --accent-soft: light-dark(#eef2ff, rgba(99, 102, 241, 0.14));
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+    "Noto Sans KR", sans-serif;
+  margin: 0;
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}

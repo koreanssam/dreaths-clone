@@ -1,9 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import { getAccountCredential, getPersonaById } from "@/db";
-import type { Persona, WeaveRequest, WeaveResult } from "@/types";
+import {
+  FTC_AFFILIATE_DISCLAIMER,
+  type Persona,
+  type WeaveRequest,
+  type WeaveResult,
+} from "@/types";
 
-export const FTC_AFFILIATE_DISCLAIMER =
-  "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.";
+export { FTC_AFFILIATE_DISCLAIMER };
 
 export function buildSystemPrompt(persona: Persona): string {
   const examplesText =

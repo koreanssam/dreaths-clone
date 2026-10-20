@@ -17,7 +17,7 @@
 - [x] **Step 1**: 프로젝트 스캐폴딩, 의존성 설치 및 SQLite ERD 스키마/시드(기본 페르소나 4종 포함) 구축 (`src/types/index.ts`, `src/db/index.ts`)
 - [x] **Step 2**: Phase 1 — 쿠팡 파트너스 HMAC-SHA256 엔진(`src/services/coupang.ts`) 및 트렌드 수집 엔진(`src/services/trends.ts` - 네이버 10개 카테고리/구글 트렌드 RSS/하비스페이스 RSS & 크롤러) + REST API 구현 및 유닛 테스트(`src/__tests__/phase1.test.ts`) 완료
 - [x] **Step 3**: Phase 2 — Gemini AI 2단 타래 직조 엔진(`src/services/gemini.ts`) & 공정위 심의 문구 가드레일 + 페르소나 CRUD API(`/api/v1/personas`, `/api/v1/editor/weave`) 및 테스트(`src/__tests__/phase2.test.ts`) 완료
-- [ ] **Step 4**: Phase 3 — Meta Threads Graph API 연쇄 발행(`ThreadsService`) 및 예약 발행 API 구현
+- [x] **Step 4**: Phase 3 — Meta Threads Graph API 연쇄 발행(`src/services/threads.ts`) 및 예약 발행/계정/벤치마크 API(`/api/v1/threads/publish`, `/api/v1/threads/schedule`, `/api/v1/accounts`, `/api/v1/benchmarks`) 및 테스트(`src/__tests__/phase3.test.ts`) 완료
 - [ ] **Step 5**: Phase 4 — 프론트엔드 대시보드(`/dashboard/insights`), 스마트 에디터(`/write`), 페르소나 관리(`/dashboard/personas`), 벤치마킹/발행내역(`/benchmark`), API 연동 설정 모달 및 다크/라이트 모드 UI 구현
 - [ ] **Step 6**: 엔드투엔드(E2E) 검증, 유닛 테스트 작성 및 최종 Handoff 문서 업데이트
 

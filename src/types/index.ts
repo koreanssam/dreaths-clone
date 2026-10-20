@@ -1,0 +1,154 @@
+export type NaverCategoryCode =
+  | "50000000" // 패션의류
+  | "50000002" // 화장품/미용
+  | "50000003" // 디지털/가전
+  | "50000004" // 가구/인테리어
+  | "50000005" // 출산/육아
+  | "50000006" // 식품
+  | "50000007" // 스포츠/레저
+  | "50000008" // 생활/건강
+  | "50000009" // 여가/생활편의
+  | "50005542"; // 도서
+
+export interface NaverCategoryMeta {
+  code: NaverCategoryCode;
+  name: string;
+}
+
+export const NAVER_CATEGORIES: NaverCategoryMeta[] = [
+  { code: "50000000", name: "패션의류" },
+  { code: "50000002", name: "화장품/미용" },
+  { code: "50000003", name: "디지털/가전" },
+  { code: "50000004", name: "가구/인테리어" },
+  { code: "50000005", name: "출산/육아" },
+  { code: "50000006", name: "식품" },
+  { code: "50000007", name: "스포츠/레저" },
+  { code: "50000008", name: "생활/건강" },
+  { code: "50000009", name: "여가/생활편의" },
+  { code: "50005542", name: "도서" },
+];
+
+export interface NaverKeywordItem {
+  rank: number;
+  keyword: string;
+  categoryCode: NaverCategoryCode;
+  categoryName: string;
+  ratio: number;
+  change: "up" | "down" | "same" | "new";
+}
+
+export interface GoogleTrendNewsItem {
+  title: string;
+  url: string;
+  source: string;
+}
+
+export interface GoogleTrendItem {
+  rank: number;
+  title: string;
+  approxTraffic: string;
+  pubDate: string;
+  picture?: string;
+  newsItems: GoogleTrendNewsItem[];
+}
+
+export interface HobbySpaceItem {
+  id: string;
+  section: "ai_briefing" | "hotdeal" | "popular_post" | "popular_ranking";
+  title: string;
+  link: string;
+  summary: string;
+  publishedAt: string;
+  score?: number;
+  keywords?: string[];
+}
+
+export interface CoupangProduct {
+  productId: string;
+  productName: string;
+  productPrice: number;
+  productImage: string;
+  productUrl: string;
+  categoryName?: string;
+  isRocket?: boolean;
+  isFreeShipping?: boolean;
+}
+
+export interface Persona {
+  id: string;
+  userId: string;
+  name: string;
+  tone: string;
+  promptInstruction: string;
+  fewShotExamples: string[];
+  forbiddenWords: string[];
+  isDefault: boolean;
+}
+
+export type WritingMode = "affiliate" | "general";
+export type PostStatus = "draft" | "scheduled" | "published" | "failed";
+
+export interface WeaveRequest {
+  mode: WritingMode;
+  personaId: string;
+  keyword: string;
+  customInstruction?: string;
+  product?: {
+    productId?: string;
+    productName: string;
+    productPrice: number;
+    productUrl?: string;
+    shortenUrl?: string;
+    features?: string;
+  };
+}
+
+export interface WeaveResult {
+  threadBody1: string;
+  threadBody2: string;
+  complianceVerified: boolean;
+  charCount1: number;
+  charCount2: number;
+  modelUsed: string;
+}
+
+export interface PostRecord {
+  id: string;
+  userId: string;
+  personaId: string;
+  status: PostStatus;
+  mode: WritingMode;
+  targetKeyword: string;
+  coupangProductId: string | null;
+  coupangDeeplink: string | null;
+  threadBody1: string;
+  threadBody2: string;
+  threadExternalId1: string | null;
+  threadExternalId2: string | null;
+  scheduledAt: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+}
+
+export interface AccountCredential {
+  id: string;
+  userId: string;
+  provider: "threads" | "coupang" | "naver" | "gemini";
+  accessToken: string | null;
+  refreshToken: string | null;
+  apiKey: string | null;
+  secretKey: string | null;
+  expiresAt: string | null;
+}
+
+export interface BenchmarkItem {
+  id: string;
+  authorHandle: string;
+  category: string;
+  hookText: string;
+  replyText: string;
+  likesCount: number;
+  repliesCount: number;
+  savedAt: string;
+  notes: string;
+}

@@ -14,7 +14,7 @@
 
 ## 3. 단계별 진행 상황 (Roadmap & Checklist)
 - [x] **Step 0**: Git 저장소 초기화, GitHub 원격 저장소(`gh repo create`) 생성 및 초기 명세/Handoff 문서 커밋
-- [ ] **Step 1**: 프로젝트 스캐폴딩, 의존성 설치 및 SQLite ERD 스키마/시드(기본 페르소나 4종 포함) 구축
+- [x] **Step 1**: 프로젝트 스캐폴딩, 의존성 설치 및 SQLite ERD 스키마/시드(기본 페르소나 4종 포함) 구축 (`src/types/index.ts`, `src/db/index.ts`)
 - [ ] **Step 2**: Phase 1 — 쿠팡 파트너스 HMAC-SHA256 엔진 및 트렌드 수집 엔진(네이버/구글 트렌드 RSS/하비스페이스 RSS & 크롤러) + REST API 구현 및 테스트
 - [ ] **Step 3**: Phase 2 — Gemini AI 2단 타래 직조 엔진(`PromptEngine`) & 공정위 심의 문구 가드레일 + 페르소나 CRUD API 구현
 - [ ] **Step 4**: Phase 3 — Meta Threads Graph API 연쇄 발행(`ThreadsService`) 및 예약 발행 API 구현

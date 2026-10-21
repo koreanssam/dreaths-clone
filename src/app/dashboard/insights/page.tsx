@@ -209,6 +209,7 @@ export default function InsightsDashboardPage() {
                       </span>
                     )}
                   </div>
+                  {item.ratio != null && (
                   <div className="flex items-center gap-2 mt-1">
                     <div className="w-24 h-1.5 rounded-full bg-zinc-500/20 overflow-hidden">
                       <div
@@ -223,6 +224,7 @@ export default function InsightsDashboardPage() {
                       클릭지수 {item.ratio}
                     </span>
                   </div>
+                  )}
                 </div>
               </div>
 

@@ -302,8 +302,12 @@ export async function fetchNaverShoppingTrends(
     keyword: kw,
     categoryCode,
     categoryName: categoryMeta.name,
-    ratio: Number(Math.max(25, baseRatio - index * 4.2).toFixed(1)),
-    change: changes[index % changes.length],
+    ...(liveRankKeywords.length > 0
+      ? {}
+      : {
+          ratio: Number(Math.max(25, baseRatio - index * 4.2).toFixed(1)),
+          change: changes[index % changes.length],
+        }),
   }));
 
   const payload = {
@@ -313,7 +317,10 @@ export async function fetchNaverShoppingTrends(
     sourceMode,
   };
 
-  setTrendCache(cacheKey, "naver", payload);
+  // Only cache real rankings so a temporary DataLab block doesn't pin the fallback for an hour
+  if (liveRankKeywords.length > 0) {
+    setTrendCache(cacheKey, "naver", payload);
+  }
 
   return {
     ...payload,

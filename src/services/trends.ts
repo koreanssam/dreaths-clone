@@ -1,7 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import * as cheerio from "cheerio";
 import {
-  getAccountCredential,
   getTrendCache,
   setTrendCache,
 } from "@/db";
@@ -21,134 +20,74 @@ const xmlParser = new XMLParser({
   attributeNamePrefix: "@_",
 });
 
-// Category-specific high-converting shopping keywords curated & enriched with Naver DataLab ratios
-const CATEGORY_KEYWORDS_POOL: Record<NaverCategoryCode, string[]> = {
-  "50000000": [
-    "경량패딩 조끼",
-    "트위드 자켓",
-    "와이드 데님팬츠",
-    "캐시미어 가디건",
-    "바라클라바 니트모자",
-    "기모 맨투맨 세트",
-    "롱부츠 레인부츠",
-    "비즈니스 백팩",
-    "무봉제 심리스 속옷",
-    "하프집업 플리스",
-  ],
-  "50000002": [
-    "PDRN 리들샷 앰플",
-    "글루타치온 패치",
-    "약산성 폼클렌징",
-    "콜라겐 모델링팩",
-    "비건 선세럼 무기자차",
-    "스틱형 멀티밤",
-    "두피 스케일링 샴푸",
-    "속눈썹 영양제",
-    "히알루론산 수분크림",
-    "립 플럼퍼 틴트",
-  ],
-  "50000003": [
-    "맥세이프 보조배터리 10000",
-    "GaN 초고속 멀티충전기",
-    "노이즈캔슬링 블루투스 이어폰",
-    "미니 가습기 무드등",
-    "기계식 키보드 저소음적축",
-    "휴대용 미니 빔프로젝터",
-    "스탠드형 무선충전 거치대",
-    "C타입 PD 고속충전 케이블",
-    "웹캠 풀HD 화상회의",
-    "로봇청소기 올인원 스테이션",
-  ],
-  "50000004": [
-    "호텔식 차렵이불 세트",
-    "모듈형 미드센추리 협탁",
-    "무소음 LED 벽시계",
-    "경추 베개 메모리폼",
-    "틈새 트롤리 수납장",
-    "규조토 발매트 소프트",
-    "데스크테리어 모니터받침대",
-    "단스탠드 버섯조명",
-    "압축 공간박스테이프",
-    "바지걸이 논슬립 옷걸이",
-  ],
-  "50000005": [
-    "아기 물티슈 캡형 평량75g",
-    "분유포트 원터치 보온",
-    "실리콘 흡착 유아식판",
-    "층간소음 방지 롤매트",
-    "콧물흡입기 전동식",
-    "유아 변기커버 디딤대",
-    "젖병소독기 UV LED",
-    "휴대용 유모차 선풍기",
-    "아기 비데물티슈",
-    "키즈 유산균 아연",
-  ],
-  "50000006": [
-    "수비드 닭가슴살 한끼",
-    "그릭요거트 꾸덕 대용량",
-    "저당 땅콩버터 100%",
-    "애플사이다비니거 애사비",
-    "알룰로스 대용량 액상",
-    "제로슈거 단백질바",
-    "엑스트라버진 올리브오일 캡슐",
-    "곤약쫀드기 다이어트간식",
-    "무항생제 구운란 30구",
-    "프로틴 쉐이크 파우치",
-  ],
-  "50000007": [
-    "폼롤러 EPP 마사지볼",
-    "손목보호대 헬스 스트랩",
-    "접이식 실내자전거",
-    "원터치 캠핑 폴딩박스",
-    "러닝벨트 휴대폰가방",
-    "무릎보호대 등산 런닝",
-    "요가매트 TPE 10mm",
-    "보온보냉 텀블러 대용량",
-    "골프 거리측정기 레이저",
-    "세차타월 드라잉 초극세사",
-  ],
-  "50000008": [
-    "타일 줄눈 코팅제",
-    "구강세정기 휴대용 워터픽",
-    "온열 안대 수면안대",
-    "배수구 클리너 발포세정제",
-    "체지방 체중계 블루투스",
-    "목어깨 마사지기 무선",
-    "습기제거제 옷장 제습제",
-    "곰팡이 제거제 젤타입",
-    "혀클리너 스테인리스",
-    "세탁조 클리너 캡슐",
-  ],
-  "50000009": [
-    "기내용 캐리어 20인치 확장형",
-    "트래블 파우치 압축팩 6종",
-    "멀티어댑터 해외여행용",
-    "차량용 방향제 디퓨저",
-    "캠핑 불멍 화로대",
-    "휴대용 전자저울 수하물",
-    "방수팩 스마트폰 목걸이",
-    "목베개 메모리폼 에어",
-    "차량용 청소기 무선",
-    "보조가방 폴딩 보스턴백",
-  ],
-  "50005542": [
-    "하루 10분 초집중 독서법",
-    "돈의 심리학 모건 하우절",
-    "AI 에이전트 자동화 실전",
-    "영어 회화 100일 기적",
-    "초등 문해력 일력 365",
-    "부의 추월차선 완결판",
-    "ETF 배당투자 바이블",
-    "뇌과학 습관 성형",
-    "미니멀 라이프 정리수납",
-    "식단 혁명 혈당다이어트",
-  ],
+export const NAVER_DATALAB_RANK_ENDPOINT =
+  "https://datalab.naver.com/shoppingInsight/getCategoryKeywordRank.naver";
+
+export type NaverFetchError = {
+  // endpoint_changed: URL or response shape changed → collector code needs updating
+  // blocked: Naver answered with an empty body (seen after ~7 rapid calls)
+  // network: request never got a response
+  kind: "endpoint_changed" | "blocked" | "network";
+  message: string;
+  detail: string;
+  endpoint: string;
 };
 
+const NAVER_ERROR_MESSAGES: Record<NaverFetchError["kind"], string> = {
+  endpoint_changed:
+    "네이버 데이터랩 순위 주소(또는 응답 형식)가 바뀌었습니다. 수집 코드(src/services/trends.ts) 수정이 필요합니다.",
+  blocked:
+    "네이버가 요청을 잠시 막았습니다(짧은 시간에 너무 많이 호출). 몇 분 뒤 새로고침하세요.",
+  network: "네이버 데이터랩에 연결하지 못했습니다. 인터넷 연결을 확인하세요.",
+};
+
+function naverError(kind: NaverFetchError["kind"], detail: string): NaverFetchError {
+  return {
+    kind,
+    message: NAVER_ERROR_MESSAGES[kind],
+    detail,
+    endpoint: NAVER_DATALAB_RANK_ENDPOINT,
+  };
+}
+
 /**
- * 3.1.(1) Naver DataLab Shopping Insight API Integration
- * Endpoint: POST https://openapi.naver.com/v1/datalab/shopping/categories
- * Caching policy: 1 hour TTL
+ * Parses the DataLab keyword rank response. Anything other than a non-empty
+ * `ranks` array is reported as an error instead of being papered over.
+ */
+export function parseNaverRankResponse(
+  status: number,
+  body: string
+): { keywords: string[] } | { error: NaverFetchError } {
+  if (status !== 200) {
+    return { error: naverError("endpoint_changed", `HTTP ${status}`) };
+  }
+  if (body.trim() === "") {
+    return { error: naverError("blocked", "HTTP 200, empty body") };
+  }
+  let json: { ranks?: Array<{ keyword?: unknown }> };
+  try {
+    json = JSON.parse(body);
+  } catch {
+    return {
+      error: naverError("endpoint_changed", `non-JSON response: ${body.slice(0, 120)}`),
+    };
+  }
+  const keywords = Array.isArray(json.ranks)
+    ? json.ranks.map((r) => String(r?.keyword ?? "").trim()).filter(Boolean)
+    : [];
+  if (keywords.length === 0) {
+    return {
+      error: naverError("endpoint_changed", `no ranks in response: ${body.slice(0, 120)}`),
+    };
+  }
+  return { keywords };
+}
+
+/**
+ * 3.1.(1) Naver DataLab Shopping Insight keyword ranking
+ * Endpoint: POST https://datalab.naver.com/shoppingInsight/getCategoryKeywordRank.naver
+ * (the DataLab web page's own endpoint — no API key; the official Open API only returns category ratios)
+ * Caching policy: 1 hour TTL, successful results only
  */
 export async function fetchNaverShoppingTrends(
   categoryCode: NaverCategoryCode = "50000006",
@@ -158,7 +97,7 @@ export async function fetchNaverShoppingTrends(
   categoryName: string;
   keywords: NaverKeywordItem[];
   cachedAt: string;
-  sourceMode: "live_api" | "curated_datalab";
+  error?: NaverFetchError;
 }> {
   const cacheKey = `naver:${categoryCode}`;
   if (!forceRefresh) {
@@ -166,9 +105,8 @@ export async function fetchNaverShoppingTrends(
       categoryCode: NaverCategoryCode;
       categoryName: string;
       keywords: NaverKeywordItem[];
-      sourceMode: "live_api" | "curated_datalab";
     }>(cacheKey, ONE_HOUR_MS);
-    if (cached && !cached.isExpired) {
+    if (cached && !cached.isExpired && cached.data.keywords?.length > 0) {
       return {
         ...cached.data,
         cachedAt: cached.updatedAt,
@@ -179,148 +117,72 @@ export async function fetchNaverShoppingTrends(
   const categoryMeta =
     NAVER_CATEGORIES.find((c) => c.code === categoryCode) ||
     NAVER_CATEGORIES[0];
-
-  const savedNaver = getAccountCredential("naver");
-  const clientId = savedNaver?.apiKey || process.env.NAVER_CLIENT_ID || "";
-  const clientSecret =
-    savedNaver?.secretKey || process.env.NAVER_CLIENT_SECRET || "";
-
-  let baseRatio = 96.4;
-  let sourceMode: "live_api" | "curated_datalab" = "curated_datalab";
-  let liveRankKeywords: string[] = [];
-
-  // 1) Directly fetch live TOP keyword ranking from Naver DataLab Shopping Insight (No API Key / No 제휴신청 required!)
-  try {
-    const end = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
-    const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const formatDate = (d: Date) => d.toISOString().slice(0, 10);
-
-    const formBody = new URLSearchParams({
-      cid: categoryCode,
-      timeUnit: "date",
-      startDate: formatDate(start),
-      endDate: formatDate(end),
-      age: "",
-      gender: "",
-      device: "",
-      page: "1",
-      count: "20",
-    });
-
-    const rankRes = await fetch(
-      "https://datalab.naver.com/shoppingInsight/getCategoryKeywordRank.naver",
-      {
-        method: "POST",
-        headers: {
-          Referer: "https://datalab.naver.com/shoppingInsight/sCategory.naver",
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        },
-        body: formBody.toString(),
-        signal: AbortSignal.timeout(7000),
-      }
-    );
-
-    if (rankRes.ok) {
-      const rankJson = (await rankRes.json()) as {
-        ranks?: Array<{ rank: number; keyword: string }>;
-      };
-      if (Array.isArray(rankJson.ranks) && rankJson.ranks.length > 0) {
-        liveRankKeywords = rankJson.ranks.map((r) => String(r.keyword).trim());
-        sourceMode = "live_api";
-      }
-    }
-  } catch {
-    // Fallback to OpenAPI or curated pool below
-  }
-
-  // 2) Optional Open API ratio enrichment if Client ID/Secret are provided
-  if (clientId && clientSecret) {
-    try {
-      const end = new Date();
-      const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
-      const formatDate = (d: Date) => d.toISOString().slice(0, 10);
-
-      const response = await fetch(
-        "https://openapi.naver.com/v1/datalab/shopping/categories",
-        {
-          method: "POST",
-          headers: {
-            "X-Naver-Client-Id": clientId,
-            "X-Naver-Client-Secret": clientSecret,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            startDate: formatDate(start),
-            endDate: formatDate(end),
-            timeUnit: "date",
-            category: [
-              {
-                name: categoryMeta.name,
-                param: [categoryMeta.code],
-              },
-            ],
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const json = await response.json();
-        const points = json?.results?.[0]?.data || [];
-        if (Array.isArray(points) && points.length > 0) {
-          const latestPoint = points[points.length - 1];
-          baseRatio = Number(latestPoint.ratio || 95);
-          sourceMode = "live_api";
-        }
-      }
-    } catch {
-      // Keep liveRankKeywords or fallback
-    }
-  }
-
-  const pool =
-    liveRankKeywords.length > 0
-      ? liveRankKeywords.slice(0, 12)
-      : CATEGORY_KEYWORDS_POOL[categoryCode] ||
-        CATEGORY_KEYWORDS_POOL["50000006"];
-  const changes: Array<"up" | "new" | "same" | "down"> = [
-    "up",
-    "up",
-    "new",
-    "up",
-    "same",
-    "up",
-    "new",
-    "down",
-    "up",
-    "same",
-  ];
-
-  const keywords: NaverKeywordItem[] = pool.map((kw, index) => ({
-    rank: index + 1,
-    keyword: kw,
+  const base = {
     categoryCode,
     categoryName: categoryMeta.name,
-    ...(liveRankKeywords.length > 0
-      ? {}
-      : {
-          ratio: Number(Math.max(25, baseRatio - index * 4.2).toFixed(1)),
-          change: changes[index % changes.length],
-        }),
-  }));
-
-  const payload = {
-    categoryCode,
-    categoryName: categoryMeta.name,
-    keywords,
-    sourceMode,
   };
 
-  // Only cache real rankings so a temporary DataLab block doesn't pin the fallback for an hour
-  if (liveRankKeywords.length > 0) {
-    setTrendCache(cacheKey, "naver", payload);
+  const end = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+  const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
+  let status: number;
+  let body: string;
+  try {
+    const res = await fetch(NAVER_DATALAB_RANK_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Referer: "https://datalab.naver.com/shoppingInsight/sCategory.naver",
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      body: new URLSearchParams({
+        cid: categoryCode,
+        timeUnit: "date",
+        startDate: formatDate(start),
+        endDate: formatDate(end),
+        age: "",
+        gender: "",
+        device: "",
+        page: "1",
+        count: "20",
+      }).toString(),
+      redirect: "manual",
+      signal: AbortSignal.timeout(7000),
+    });
+    status = res.status;
+    body = await res.text();
+  } catch (err) {
+    const error = naverError(
+      "network",
+      err instanceof Error ? err.message : String(err)
+    );
+    console.error("[naver-datalab]", error.kind, error.detail);
+    return { ...base, keywords: [], cachedAt: new Date().toISOString(), error };
   }
+
+  const parsed = parseNaverRankResponse(status, body);
+  if ("error" in parsed) {
+    console.error("[naver-datalab]", parsed.error.kind, parsed.error.detail);
+    return {
+      ...base,
+      keywords: [],
+      cachedAt: new Date().toISOString(),
+      error: parsed.error,
+    };
+  }
+
+  const payload = {
+    ...base,
+    keywords: parsed.keywords.slice(0, 20).map((kw, index) => ({
+      rank: index + 1,
+      keyword: kw,
+      categoryCode,
+      categoryName: categoryMeta.name,
+    })),
+  };
+  setTrendCache(cacheKey, "naver", payload);
 
   return {
     ...payload,

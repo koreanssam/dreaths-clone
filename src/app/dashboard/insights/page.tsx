@@ -25,6 +25,12 @@ export default function InsightsDashboardPage() {
   const [selectedCategory, setSelectedCategory] =
     useState<NaverCategoryCode>("50000006");
   const [naverKeywords, setNaverKeywords] = useState<NaverKeywordItem[]>([]);
+  const [naverError, setNaverError] = useState<{
+    kind: string;
+    message: string;
+    detail: string;
+    endpoint: string;
+  } | null>(null);
   const [googleItems, setGoogleItems] = useState<GoogleTrendItem[]>([]);
   const [hobbyItems, setHobbyItems] = useState<HobbySpaceItem[]>([]);
   const [hobbyFilter, setHobbyFilter] = useState<
@@ -48,6 +54,7 @@ export default function InsightsDashboardPage() {
       const json = await res.json();
       if (json.ok) {
         setNaverKeywords(json.naver?.keywords || []);
+        setNaverError(json.naver?.error || null);
         setGoogleItems(json.google?.items || []);
         setHobbyItems(json.hobbyspace?.items || []);
         setCachedAt(json.naver?.cachedAt || new Date().toISOString());
@@ -174,6 +181,18 @@ export default function InsightsDashboardPage() {
           })}
         </div>
 
+        {naverError && (
+          <div className="p-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-sm space-y-1">
+            <div className="font-bold text-rose-400">{naverError.message}</div>
+            <div className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
+              [{naverError.kind}] {naverError.detail}
+            </div>
+            <div className="text-xs font-mono break-all" style={{ color: "var(--text-muted)" }}>
+              {naverError.endpoint}
+            </div>
+          </div>
+        )}
+
         {/* Keyword Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {naverKeywords.map((item) => (
@@ -198,33 +217,7 @@ export default function InsightsDashboardPage() {
                 <div className="min-w-0">
                   <div className="font-bold text-sm truncate flex items-center gap-2">
                     <span>{item.keyword}</span>
-                    {item.change === "new" && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">
-                        NEW
-                      </span>
-                    )}
-                    {item.change === "up" && (
-                      <span className="text-[10px] text-emerald-400 font-bold">
-                        ▲ 급상승
-                      </span>
-                    )}
                   </div>
-                  {item.ratio != null && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-24 h-1.5 rounded-full bg-zinc-500/20 overflow-hidden">
-                      <div
-                        className="h-full bg-indigo-500 rounded-full"
-                        style={{ width: `${Math.min(100, item.ratio)}%` }}
-                      />
-                    </div>
-                    <span
-                      className="text-[11px]"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      클릭지수 {item.ratio}
-                    </span>
-                  </div>
-                  )}
                 </div>
               </div>
 

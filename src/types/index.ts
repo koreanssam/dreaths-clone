@@ -36,9 +36,6 @@ export interface NaverKeywordItem {
   keyword: string;
   categoryCode: NaverCategoryCode;
   categoryName: string;
-  // DataLab's keyword rank endpoint returns rank only; these are set only for the curated fallback
-  ratio?: number;
-  change?: "up" | "down" | "same" | "new";
 }
 
 export interface GoogleTrendNewsItem {

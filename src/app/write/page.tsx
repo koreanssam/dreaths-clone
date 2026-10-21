@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import {
   FTC_AFFILIATE_DISCLAIMER,
+  WEAVE_MODELS,
+  type WeaveModelId,
   type CoupangProduct,
   type Persona,
   type WritingMode,
@@ -55,6 +57,12 @@ function SmartEditorContent() {
   const [threadBody2, setThreadBody2] = useState<string>(initialReply);
   const [weaving, setWeaving] = useState<boolean>(false);
   const [modelUsed, setModelUsed] = useState<string>("");
+  const [weaveModel, setWeaveModel] = useState<WeaveModelId>("solar-pro4");
+  const [keyStatus, setKeyStatus] = useState<
+    Record<string, { configured: boolean; apiKeyPreview: string }>
+  >({});
+  const [quickKey, setQuickKey] = useState<string>("");
+  const [savingKey, setSavingKey] = useState<boolean>(false);
 
   // Publishing & Scheduling state
   const [publishing, setPublishing] = useState<boolean>(false);
@@ -77,6 +85,49 @@ function SmartEditorContent() {
         }
       });
   }, []);
+
+  async function fetchKeyStatus() {
+    try {
+      const res = await fetch("/api/v1/accounts");
+      const json = await res.json();
+      if (json.ok) setKeyStatus(json.status || {});
+    } catch {
+      // ignore
+    }
+  }
+
+  useEffect(() => {
+    fetchKeyStatus();
+  }, []);
+
+  const activeModel = WEAVE_MODELS.find((m) => m.id === weaveModel)!;
+  const activeKeyLive = Boolean(keyStatus[activeModel.provider]?.configured);
+
+  async function handleSaveQuickKey() {
+    if (!quickKey.trim()) return;
+    setSavingKey(true);
+    try {
+      const res = await fetch("/api/v1/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: activeModel.provider,
+          apiKey: quickKey,
+        }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        setQuickKey("");
+        await fetchKeyStatus();
+        setStatusBanner({
+          type: "success",
+          text: `${activeModel.label} API 키가 저장되었습니다.`,
+        });
+      }
+    } finally {
+      setSavingKey(false);
+    }
+  }
 
   useEffect(() => {
     if (initialKeyword) {
@@ -134,6 +185,7 @@ function SmartEditorContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          model: weaveModel,
           mode,
           personaId: selectedPersonaId,
           keyword,
@@ -153,7 +205,7 @@ function SmartEditorContent() {
       if (json.ok) {
         setThreadBody1(json.threadBody1);
         setThreadBody2(json.threadBody2);
-        setModelUsed(json.modelUsed || "gemini");
+        setModelUsed(json.modelUsed || weaveModel);
         setStatusBanner({
           type: "info",
           text: "2단 타래 원고 직조 및 공정위 심의 문구·외부링크 분리 가드레일이 적용되었습니다.",
@@ -518,6 +570,95 @@ function SmartEditorContent() {
 
             <div className="space-y-2">
               <label className="text-xs font-semibold block">
+                직조 LLM 모델 선택
+              </label>
+              <div
+                role="tablist"
+                className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+              >
+                {WEAVE_MODELS.map((m) => {
+                  const selected = m.id === weaveModel;
+                  const live = Boolean(keyStatus[m.provider]?.configured);
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => setWeaveModel(m.id)}
+                      className={`p-3 rounded-xl border text-left cursor-pointer space-y-1 ${
+                        selected ? "ring-2 ring-indigo-500" : ""
+                      }`}
+                      style={{
+                        backgroundColor: "var(--bg-elevated)",
+                        borderColor: selected
+                          ? "rgb(99 102 241)"
+                          : "var(--border-subtle)",
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-bold">{m.label}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            live
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : "bg-amber-500/15 text-amber-400"
+                          }`}
+                        >
+                          {live ? "LIVE" : "AUTO"}
+                        </span>
+                      </div>
+                      <p
+                        className="text-[11px]"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        {m.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div
+                className="p-3 rounded-xl border space-y-2"
+                style={{
+                  backgroundColor: "var(--bg-elevated)",
+                  borderColor: "var(--border-subtle)",
+                }}
+              >
+                <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                  {activeKeyLive
+                    ? `${activeModel.label} 연동됨 (LIVE) — 키: ${
+                        keyStatus[activeModel.provider]?.apiKeyPreview || "env"
+                      }. 아래에서 키를 교체할 수 있습니다.`
+                    : `${activeModel.label} 키 미연동 (AUTO) — 페르소나 폴백 엔진으로 직조됩니다. 키를 입력하면 실제 모델이 호출됩니다.`}
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={quickKey}
+                    onChange={(e) => setQuickKey(e.target.value)}
+                    placeholder={`${activeModel.label} API Key`}
+                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border text-xs"
+                    style={{
+                      backgroundColor: "var(--bg-surface)",
+                      borderColor: "var(--border-subtle)",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveQuickKey}
+                    disabled={savingKey || !quickKey.trim()}
+                    className="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    {savingKey ? "저장 중..." : "키 저장"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold block">
                 적용할 페르소나 선택
               </label>
               <select
@@ -564,7 +705,7 @@ function SmartEditorContent() {
               <Sparkles className="w-4 h-4" />
               {weaving
                 ? "페르소나 스타일로 2단 타래 직조 중..."
-                : "Gemini 2-Stage 멀티 스레드 원고 직조하기"}
+                : `${activeModel.label} 2-Stage 멀티 스레드 원고 직조하기`}
             </button>
           </div>
         </div>
@@ -620,7 +761,7 @@ function SmartEditorContent() {
                 rows={7}
                 value={threadBody1}
                 onChange={(e) => setThreadBody1(e.target.value)}
-                placeholder="위에서 [Gemini 2-Stage 멀티 스레드 원고 직조하기] 버튼을 누르거나 직접 본문을 작성하세요."
+                placeholder="위에서 [2-Stage 멀티 스레드 원고 직조하기] 버튼을 누르거나 직접 본문을 작성하세요."
                 className="w-full p-3 rounded-xl border text-xs leading-relaxed resize-y"
                 style={{
                   backgroundColor: "var(--bg-surface)",

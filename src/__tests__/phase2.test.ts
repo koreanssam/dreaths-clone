@@ -73,4 +73,28 @@ describe("Phase 2: Persona CRUD & 2-Stage Weave Engine Guardrails", () => {
     expect(res.threadBody2).toContain("https://link.coupang.com/a/bChkn77");
     expect(res.threadBody2).toContain(FTC_AFFILIATE_DISCLAIMER);
   });
+
+  it.each(["solar-pro4", "gpt-6-luna"] as const)(
+    "weaves with selected model %s (fallback keeps guardrails)",
+    async (model) => {
+      const res = await weaveThreadsContent({
+        model,
+        mode: "affiliate",
+        personaId: "persona-factcoach",
+        keyword: "무선 청소기",
+        product: {
+          productName: "[쿠팡 베스트] 무선 청소기",
+          productPrice: 89000,
+          shortenUrl: "https://link.coupang.com/a/bModel1",
+        },
+      });
+
+      expect(res.modelUsed).toContain(model);
+      expect(res.complianceVerified).toBe(true);
+      expect(res.threadBody1).not.toContain("https://");
+      expect(res.threadBody1.length).toBeLessThanOrEqual(500);
+      expect(res.threadBody2).toContain("https://link.coupang.com/a/bModel1");
+      expect(res.threadBody2).toContain(FTC_AFFILIATE_DISCLAIMER);
+    }
+  );
 });

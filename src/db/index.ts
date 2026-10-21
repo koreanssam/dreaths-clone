@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import crypto from "crypto";
 import path from "path";
 import type {
+  AccountProvider,
   AccountCredential,
   BenchmarkItem,
   Persona,
@@ -468,7 +469,7 @@ export function listPosts(): PostRecord[] {
 
 // --- Accounts / API Credentials Helpers ---
 export function getAccountCredential(
-  provider: "threads" | "coupang" | "naver" | "gemini"
+  provider: AccountProvider
 ): AccountCredential | null {
   const db = getDb();
   const row = db
@@ -491,7 +492,7 @@ export function getAccountCredential(
 }
 
 export function upsertAccountCredential(input: {
-  provider: "threads" | "coupang" | "naver" | "gemini";
+  provider: AccountProvider;
   accessToken?: string | null;
   refreshToken?: string | null;
   apiKey?: string | null;

@@ -16,11 +16,14 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
+import type { AccountProvider } from "@/types";
 
 interface ApiStatusMap {
   naver?: { configured: boolean; apiKeyPreview: string };
   coupang?: { configured: boolean; apiKeyPreview: string };
   gemini?: { configured: boolean; apiKeyPreview: string };
+  upstage?: { configured: boolean; apiKeyPreview: string };
+  openai?: { configured: boolean; apiKeyPreview: string };
   threads?: { configured: boolean; apiKeyPreview: string };
 }
 
@@ -36,6 +39,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [coupangAccess, setCoupangAccess] = useState("");
   const [coupangSecret, setCoupangSecret] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
+  const [upstageKey, setUpstageKey] = useState("");
+  const [openaiKey, setOpenaiKey] = useState("");
   const [threadsUserId, setThreadsUserId] = useState("");
   const [threadsToken, setThreadsToken] = useState("");
   const [naverId, setNaverId] = useState("");
@@ -114,7 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   async function saveCredential(
-    provider: "coupang" | "gemini" | "threads" | "naver",
+    provider: AccountProvider,
     payload: Record<string, string>
   ) {
     setSavingProvider(provider);
@@ -284,7 +289,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
             <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-              {(["naver", "coupang", "gemini", "threads"] as const).map((k) => {
+              {(["upstage", "openai", "gemini", "coupang", "threads", "naver"] as const).map((k) => {
                 const isLive = apiStatus[k]?.configured;
                 return (
                   <div
@@ -404,6 +409,86 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="w-full py-2 rounded-lg bg-indigo-600 text-white font-semibold cursor-pointer hover:bg-indigo-500"
               >
                 쿠팡 API 키 저장
+              </button>
+            </div>
+
+            {/* Upstage */}
+            <div
+              className="p-4 rounded-xl border space-y-2.5"
+              style={{
+                backgroundColor: "var(--bg-elevated)",
+                borderColor: "var(--border-subtle)",
+              }}
+            >
+              <div className="font-bold text-sm flex items-center justify-between">
+                <span>Upstage Solar Pro 4</span>
+                <span className="text-[10px] text-indigo-400">2단 타래 직조</span>
+              </div>
+              <input
+                type="password"
+                placeholder="UPSTAGE_API_KEY (console.upstage.ai)"
+                value={upstageKey}
+                onChange={(e) => setUpstageKey(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border text-xs"
+                style={{
+                  backgroundColor: "var(--bg-surface)",
+                  borderColor: "var(--border-subtle)",
+                }}
+              />
+              <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                페르소나 프롬프트 + 공정위 필수 문구 가드레일이 적용됩니다.
+              </p>
+              <button
+                type="button"
+                disabled={savingProvider === "upstage"}
+                onClick={() =>
+                  saveCredential("upstage", {
+                    apiKey: upstageKey,
+                  })
+                }
+                className="w-full py-2 rounded-lg bg-indigo-600 text-white font-semibold cursor-pointer hover:bg-indigo-500"
+              >
+                Upstage 키 저장
+              </button>
+            </div>
+
+            {/* OpenAI */}
+            <div
+              className="p-4 rounded-xl border space-y-2.5"
+              style={{
+                backgroundColor: "var(--bg-elevated)",
+                borderColor: "var(--border-subtle)",
+              }}
+            >
+              <div className="font-bold text-sm flex items-center justify-between">
+                <span>OpenAI GPT-6-Luna</span>
+                <span className="text-[10px] text-indigo-400">2단 타래 직조</span>
+              </div>
+              <input
+                type="password"
+                placeholder="OPENAI_API_KEY"
+                value={openaiKey}
+                onChange={(e) => setOpenaiKey(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border text-xs"
+                style={{
+                  backgroundColor: "var(--bg-surface)",
+                  borderColor: "var(--border-subtle)",
+                }}
+              />
+              <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                페르소나 프롬프트 + 공정위 필수 문구 가드레일이 적용됩니다.
+              </p>
+              <button
+                type="button"
+                disabled={savingProvider === "openai"}
+                onClick={() =>
+                  saveCredential("openai", {
+                    apiKey: openaiKey,
+                  })
+                }
+                className="w-full py-2 rounded-lg bg-indigo-600 text-white font-semibold cursor-pointer hover:bg-indigo-500"
+              >
+                OpenAI 키 저장
               </button>
             </div>
 

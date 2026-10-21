@@ -2,7 +2,9 @@ import { GoogleGenAI } from "@google/genai";
 import { getAccountCredential, getPersonaById } from "@/db";
 import {
   FTC_AFFILIATE_DISCLAIMER,
+  WEAVE_MODELS,
   type Persona,
+  type WeaveModelId,
   type WeaveRequest,
   type WeaveResult,
 } from "@/types";
@@ -92,6 +94,64 @@ export function enforceWeaveGuardrails(params: {
   };
 }
 
+function buildUserPrompt(input: WeaveRequest, shortenUrl: string): string {
+  return [
+    `작성 모드: ${
+      input.mode === "affiliate"
+        ? "쿠팡파트너스 제휴마케팅 (2단 타래)"
+        : "간편/전문성 정보글 (링크 없음)"
+    }`,
+    `타겟 키워드: ${input.keyword}`,
+    input.product
+      ? `선택 상품명: ${input.product.productName}\n가격: ${input.product.productPrice.toLocaleString()}원\n특장점: ${
+          input.product.features || "로켓배송, 가성비 우수, 실사용자 후기 검증"
+        }\n삽입할 딥링크: ${shortenUrl}`
+      : "",
+    input.customInstruction
+      ? `사용자 추가 지침: ${input.customInstruction}`
+      : "",
+    `위 정보를 바탕으로 JSON {"threadBody1": "...", "threadBody2": "..."} 형태로 작성해 주세요.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function extractJson(text: string): string {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  return start >= 0 && end > start ? text.slice(start, end + 1) : text;
+}
+
+async function callOpenAICompatible(params: {
+  url: string;
+  apiKey: string;
+  model: string;
+  systemPrompt: string;
+  userPrompt: string;
+}): Promise<string> {
+  const res = await fetch(params.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${params.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: params.model,
+      messages: [
+        { role: "system", content: params.systemPrompt },
+        { role: "user", content: params.userPrompt },
+      ],
+      response_format: { type: "json_object" },
+    }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`LLM API ${res.status}`);
+  const json = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return json.choices?.[0]?.message?.content || "";
+}
+
 export async function weaveThreadsContent(
   input: WeaveRequest
 ): Promise<WeaveResult> {
@@ -99,8 +159,20 @@ export async function weaveThreadsContent(
     getPersonaById(input.personaId) || getPersonaById("persona-heymongle")!;
   const systemPrompt = buildSystemPrompt(persona);
 
-  const savedGemini = getAccountCredential("gemini");
-  const apiKey = savedGemini?.apiKey || process.env.GEMINI_API_KEY || "";
+  const modelId: WeaveModelId = WEAVE_MODELS.some((m) => m.id === input.model)
+    ? (input.model as WeaveModelId)
+    : "gemini-2.5-flash";
+  const modelMeta = WEAVE_MODELS.find((m) => m.id === modelId)!;
+
+  const envKeys = {
+    upstage: process.env.UPSTAGE_API_KEY,
+    openai: process.env.OPENAI_API_KEY,
+    gemini: process.env.GEMINI_API_KEY,
+  } as const;
+  const apiKey =
+    getAccountCredential(modelMeta.provider)?.apiKey ||
+    envKeys[modelMeta.provider] ||
+    "";
 
   const shortenUrl =
     input.product?.shortenUrl ||
@@ -109,38 +181,33 @@ export async function weaveThreadsContent(
 
   if (apiKey) {
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      const userPrompt = [
-        `작성 모드: ${
-          input.mode === "affiliate"
-            ? "쿠팡파트너스 제휴마케팅 (2단 타래)"
-            : "간편/전문성 정보글 (링크 없음)"
-        }`,
-        `타겟 키워드: ${input.keyword}`,
-        input.product
-          ? `선택 상품명: ${input.product.productName}\n가격: ${input.product.productPrice.toLocaleString()}원\n특장점: ${
-              input.product.features || "로켓배송, 가성비 우수, 실사용자 후기 검증"
-            }\n삽입할 딥링크: ${shortenUrl}`
-          : "",
-        input.customInstruction
-          ? `사용자 추가 지침: ${input.customInstruction}`
-          : "",
-        `위 정보를 바탕으로 JSON {"threadBody1": "...", "threadBody2": "..."} 형태로 작성해 주세요.`,
-      ]
-        .filter(Boolean)
-        .join("\n");
+      const userPrompt = buildUserPrompt(input, shortenUrl);
+      let text = "";
+      if (modelMeta.provider === "gemini") {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: modelId,
+          contents: userPrompt,
+          config: {
+            systemInstruction: systemPrompt,
+            responseMimeType: "application/json",
+          },
+        });
+        text = response.text || "";
+      } else {
+        text = await callOpenAICompatible({
+          url:
+            modelMeta.provider === "upstage"
+              ? "https://api.upstage.ai/v1/chat/completions"
+              : "https://api.openai.com/v1/chat/completions",
+          apiKey,
+          model: modelId,
+          systemPrompt,
+          userPrompt,
+        });
+      }
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: userPrompt,
-        config: {
-          systemInstruction: systemPrompt,
-          responseMimeType: "application/json",
-        },
-      });
-
-      const text = response.text || "";
-      const parsed = JSON.parse(text) as {
+      const parsed = JSON.parse(extractJson(text)) as {
         threadBody1?: string;
         threadBody2?: string;
       };
@@ -158,7 +225,7 @@ export async function weaveThreadsContent(
           ...guarded,
           charCount1: guarded.threadBody1.length,
           charCount2: guarded.threadBody2.length,
-          modelUsed: "gemini-2.5-flash",
+          modelUsed: modelId,
         };
       }
     } catch {
@@ -180,7 +247,7 @@ export async function weaveThreadsContent(
     ...guarded,
     charCount1: guarded.threadBody1.length,
     charCount2: guarded.threadBody2.length,
-    modelUsed: "dreaths-persona-engine-v1",
+    modelUsed: `${modelId} (persona-engine fallback)`,
   };
 }
 

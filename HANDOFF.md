@@ -3,7 +3,7 @@
 ## 1. 프로젝트 개요 및 현재 상태
 `DREATHS_REVERSE_ENGINEERING_AND_SPECS.md`의 모든 요구사항(Phase 1 ~ Phase 4)이 엔드투엔드로 구현 및 검증 완료되었습니다.
 - **GitHub 저장소**: `https://github.com/koreanssam/dreaths-clone`
-- **빌드 & 테스트 상태**: `vitest` 유닛 테스트 10/10 통과, `next build` 프로덕션 빌드 통과.
+- **빌드 & 테스트 상태**: `vitest` 유닛 테스트 12/12 통과, `next build` 프로덕션 빌드 통과.
 
 ---
 
@@ -28,6 +28,7 @@
 - [x] **Step 3**: Phase 2 — Gemini AI 2단 타래 직조 엔진(`src/services/gemini.ts`) & 공정위 심의 문구 가드레일 + 페르소나 CRUD API(`/api/v1/personas`, `/api/v1/editor/weave`) 및 테스트(`src/__tests__/phase2.test.ts`) 완료
 - [x] **Step 4**: Phase 3 — Meta Threads Graph API 연쇄 발행(`src/services/threads.ts`) 및 예약 발행/계정/벤치마크 API(`/api/v1/threads/publish`, `/api/v1/threads/schedule`, `/api/v1/accounts`, `/api/v1/benchmarks`) 및 테스트(`src/__tests__/phase3.test.ts`) 완료
 - [x] **Step 5**: Phase 4 — 프론트엔드 대시보드(`/dashboard/insights`), 스마트 에디터(`/write`), 페르소나 관리(`/dashboard/personas`), 벤치마킹/발행내역(`/benchmark`), API 연동 설정 모달 및 다크/라이트 모드 UI 구현
+- [x] **Step 7**: 멀티 LLM 직조 — `solar-pro4`(Upstage, `api.upstage.ai/v1/chat/completions`), `gpt-6-luna`(OpenAI, `api.openai.com/v1/chat/completions`), `gemini-2.5-flash` 선택 지원 (`src/services/gemini.ts`, `WEAVE_MODELS` in `src/types/index.ts`). 키 없음/호출 실패 시 선택 모델명이 `modelUsed`에 반영된 페르소나 폴백 + `enforceWeaveGuardrails` 적용. `accounts` provider에 `upstage`/`openai` 추가, `/write` 3단계 모델 카드 + 인라인 키 저장, AppShell 키 설정 모달에 Upstage/OpenAI 카드 추가. 환경변수: `UPSTAGE_API_KEY`, `OPENAI_API_KEY`
 - [x] **Step 6**: 엔드투엔드(E2E) 프로덕션 빌드 검증, 유닛 테스트 검증 및 최종 Handoff 문서 업데이트
 
 ---
@@ -43,7 +44,7 @@
    npm run dev
    ```
 3. **실제 외부 API 키 주입 방법 (2가지 모두 지원)**:
-   - 방법 A: 웹 UI 좌측 하단 `외부 플랫폼 연동 상태 > 키 설정` 버튼 클릭 → 모달 창에서 쿠팡 파트너스, Gemini, Meta Threads, 네이버 데이터랩 키 저장 (SQLite `accounts` 테이블에 즉시 반영)
+   - 방법 A: 웹 UI 좌측 하단 `외부 플랫폼 연동 상태 > 키 설정` 버튼 클릭 → 모달 창에서 쿠팡 파트너스, Upstage, OpenAI, Gemini, Meta Threads, 네이버 데이터랩 키 저장 (SQLite `accounts` 테이블에 즉시 반영)
    - 방법 B: `.env.local` 파일에 `.env.example` 항목 설정
 4. **테스트 및 빌드 검증**:
    ```bash

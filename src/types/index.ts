@@ -91,7 +91,53 @@ export interface Persona {
 export type WritingMode = "affiliate" | "general";
 export type PostStatus = "draft" | "scheduled" | "published" | "failed";
 
+export type AccountProvider =
+  | "threads"
+  | "coupang"
+  | "naver"
+  | "gemini"
+  | "upstage"
+  | "openai";
+
+export const ACCOUNT_PROVIDERS: AccountProvider[] = [
+  "upstage",
+  "openai",
+  "gemini",
+  "coupang",
+  "threads",
+  "naver",
+];
+
+export type WeaveModelId = "solar-pro4" | "gpt-6-luna" | "gemini-2.5-flash";
+
+export const WEAVE_MODELS: {
+  id: WeaveModelId;
+  label: string;
+  provider: "upstage" | "openai" | "gemini";
+  description: string;
+}[] = [
+  {
+    id: "solar-pro4",
+    label: "Upstage Solar Pro 4",
+    provider: "upstage",
+    description: "한국어 특화 고성능 LLM",
+  },
+  {
+    id: "gpt-6-luna",
+    label: "OpenAI GPT-6-Luna",
+    provider: "openai",
+    description: "범용 고품질 LLM",
+  },
+  {
+    id: "gemini-2.5-flash",
+    label: "Google Gemini 2.5 Flash",
+    provider: "gemini",
+    description: "빠르고 가성비 좋은 LLM",
+  },
+];
+
 export interface WeaveRequest {
+  model?: WeaveModelId;
   mode: WritingMode;
   personaId: string;
   keyword: string;
@@ -136,7 +182,7 @@ export interface PostRecord {
 export interface AccountCredential {
   id: string;
   userId: string;
-  provider: "threads" | "coupang" | "naver" | "gemini";
+  provider: AccountProvider;
   accessToken: string | null;
   refreshToken: string | null;
   apiKey: string | null;

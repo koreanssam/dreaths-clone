@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccountCredential, upsertAccountCredential } from "@/db";
+import { ACCOUNT_PROVIDERS, type AccountProvider } from "@/types";
 
 export async function GET() {
-  const providers = ["naver", "coupang", "gemini", "threads"] as const;
+  const providers = ACCOUNT_PROVIDERS;
   const status = Object.fromEntries(
     providers.map((p) => {
       const cred = getAccountCredential(p);
@@ -29,12 +30,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const provider = body?.provider as
-      | "threads"
-      | "coupang"
-      | "naver"
-      | "gemini";
-    if (!["threads", "coupang", "naver", "gemini"].includes(provider)) {
+    const provider = body?.provider as AccountProvider;
+    if (!ACCOUNT_PROVIDERS.includes(provider)) {
       return NextResponse.json(
         { ok: false, error: "유효하지 않은 provider입니다." },
         { status: 400 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { weaveThreadsContent } from "@/services/gemini";
-import type { WeaveRequest, WritingMode } from "@/types";
+import { WEAVE_MODELS, type WeaveModelId, type WeaveRequest, type WritingMode } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +13,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const model = WEAVE_MODELS.find((m) => m.id === body?.model)?.id as
+      | WeaveModelId
+      | undefined;
     const weaveReq: WeaveRequest = {
+      model,
       mode: (body?.mode as WritingMode) || "affiliate",
       personaId: String(body?.personaId || "persona-heymongle"),
       keyword,

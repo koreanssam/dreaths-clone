@@ -44,7 +44,7 @@
    npm run dev
    ```
 3. **실제 외부 API 키 주입 방법 (2가지 모두 지원)**:
-   - 방법 A: 웹 UI 좌측 하단 `외부 플랫폼 연동 상태 > 키 설정` 버튼 클릭 → 모달 창에서 쿠팡 파트너스, Upstage, OpenAI, Gemini, Meta Threads, 네이버 데이터랩 키 저장 (SQLite `accounts` 테이블에 즉시 반영)
+   - 방법 A: 웹 UI 좌측 하단 `외부 플랫폼 연동 상태 > 키 설정` 버튼 클릭 → 모달 창에서 쿠팡 파트너스, Upstage, OpenAI, Gemini, Meta Threads 키 저장 (네이버 데이터랩은 키 불필요) (SQLite `accounts` 테이블에 즉시 반영)
    - 방법 B: `.env.local` 파일에 `.env.example` 항목 설정
 4. **테스트 및 빌드 검증**:
    ```bash

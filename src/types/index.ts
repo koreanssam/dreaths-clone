@@ -92,7 +92,6 @@ export type PostStatus = "draft" | "scheduled" | "published" | "failed";
 export type AccountProvider =
   | "threads"
   | "coupang"
-  | "naver"
   | "gemini"
   | "upstage"
   | "openai";
@@ -103,7 +102,6 @@ export const ACCOUNT_PROVIDERS: AccountProvider[] = [
   "gemini",
   "coupang",
   "threads",
-  "naver",
 ];
 
 export type WeaveModelId = "solar-pro4" | "gpt-6-luna" | "gemini-2.5-flash";

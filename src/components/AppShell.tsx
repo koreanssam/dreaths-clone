@@ -19,7 +19,6 @@ import {
 import type { AccountProvider } from "@/types";
 
 interface ApiStatusMap {
-  naver?: { configured: boolean; apiKeyPreview: string };
   coupang?: { configured: boolean; apiKeyPreview: string };
   gemini?: { configured: boolean; apiKeyPreview: string };
   upstage?: { configured: boolean; apiKeyPreview: string };
@@ -43,8 +42,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [openaiKey, setOpenaiKey] = useState("");
   const [threadsUserId, setThreadsUserId] = useState("");
   const [threadsToken, setThreadsToken] = useState("");
-  const [naverId, setNaverId] = useState("");
-  const [naverSecret, setNaverSecret] = useState("");
 
   useEffect(() => {
     const meta = document.querySelector(
@@ -289,7 +286,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
             <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-              {(["upstage", "openai", "gemini", "coupang", "threads", "naver"] as const).map((k) => {
+              {(["upstage", "openai", "gemini", "coupang", "threads"] as const).map((k) => {
                 const isLive = apiStatus[k]?.configured;
                 return (
                   <div
@@ -578,55 +575,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="w-full py-2 rounded-lg bg-indigo-600 text-white font-semibold cursor-pointer hover:bg-indigo-500"
               >
                 Threads 토큰 저장
-              </button>
-            </div>
-
-            {/* Naver DataLab */}
-            <div
-              className="p-4 rounded-xl border space-y-2.5"
-              style={{
-                backgroundColor: "var(--bg-elevated)",
-                borderColor: "var(--border-subtle)",
-              }}
-            >
-              <div className="font-bold text-sm flex items-center justify-between">
-                <span>네이버 데이터랩 쇼핑인사이트</span>
-                <span className="text-[10px] text-indigo-400">TTL 1시간</span>
-              </div>
-              <input
-                type="text"
-                placeholder="X-Naver-Client-Id"
-                value={naverId}
-                onChange={(e) => setNaverId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border text-xs"
-                style={{
-                  backgroundColor: "var(--bg-surface)",
-                  borderColor: "var(--border-subtle)",
-                }}
-              />
-              <input
-                type="password"
-                placeholder="X-Naver-Client-Secret"
-                value={naverSecret}
-                onChange={(e) => setNaverSecret(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border text-xs"
-                style={{
-                  backgroundColor: "var(--bg-surface)",
-                  borderColor: "var(--border-subtle)",
-                }}
-              />
-              <button
-                type="button"
-                disabled={savingProvider === "naver"}
-                onClick={() =>
-                  saveCredential("naver", {
-                    apiKey: naverId,
-                    secretKey: naverSecret,
-                  })
-                }
-                className="w-full py-2 rounded-lg bg-indigo-600 text-white font-semibold cursor-pointer hover:bg-indigo-500"
-              >
-                네이버 API 키 저장
               </button>
             </div>
           </div>

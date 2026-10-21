@@ -135,9 +135,6 @@ UPSTAGE_API_KEY=up_xxxxxxxxxxxxxxxxxxxxxxxx
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxx
 GEMINI_API_KEY=AIzaSyxxxxxxxxxxxxxxxxxxxxxx
 
-# 네이버 데이터랩 쇼핑인사이트
-NAVER_CLIENT_ID=xxxxxxxxxxxxxxxxxxxx
-NAVER_CLIENT_SECRET=xxxxxxxxxx
 
 # 쿠팡 파트너스 Open API
 COUPANG_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxx

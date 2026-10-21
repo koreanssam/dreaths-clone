@@ -185,9 +185,57 @@ export async function fetchNaverShoppingTrends(
   const clientSecret =
     savedNaver?.secretKey || process.env.NAVER_CLIENT_SECRET || "";
 
-  let baseRatio = 92.4;
+  let baseRatio = 96.4;
   let sourceMode: "live_api" | "curated_datalab" = "curated_datalab";
+  let liveRankKeywords: string[] = [];
 
+  // 1) Directly fetch live TOP keyword ranking from Naver DataLab Shopping Insight (No API Key / No 제휴신청 required!)
+  try {
+    const end = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
+    const formBody = new URLSearchParams({
+      cid: categoryCode,
+      timeUnit: "date",
+      startDate: formatDate(start),
+      endDate: formatDate(end),
+      age: "",
+      gender: "",
+      device: "",
+      page: "1",
+      count: "20",
+    });
+
+    const rankRes = await fetch(
+      "https://datalab.naver.com/shoppingInsight/getCategoryKeywordRank.naver",
+      {
+        method: "POST",
+        headers: {
+          Referer: "https://datalab.naver.com/shoppingInsight/sCategory.naver",
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        },
+        body: formBody.toString(),
+        signal: AbortSignal.timeout(7000),
+      }
+    );
+
+    if (rankRes.ok) {
+      const rankJson = (await rankRes.json()) as {
+        ranks?: Array<{ rank: number; keyword: string }>;
+      };
+      if (Array.isArray(rankJson.ranks) && rankJson.ranks.length > 0) {
+        liveRankKeywords = rankJson.ranks.map((r) => String(r.keyword).trim());
+        sourceMode = "live_api";
+      }
+    }
+  } catch {
+    // Fallback to OpenAPI or curated pool below
+  }
+
+  // 2) Optional Open API ratio enrichment if Client ID/Secret are provided
   if (clientId && clientSecret) {
     try {
       const end = new Date();
@@ -227,12 +275,15 @@ export async function fetchNaverShoppingTrends(
         }
       }
     } catch {
-      // Fallback to curated keyword ratios
+      // Keep liveRankKeywords or fallback
     }
   }
 
   const pool =
-    CATEGORY_KEYWORDS_POOL[categoryCode] || CATEGORY_KEYWORDS_POOL["50000006"];
+    liveRankKeywords.length > 0
+      ? liveRankKeywords.slice(0, 12)
+      : CATEGORY_KEYWORDS_POOL[categoryCode] ||
+        CATEGORY_KEYWORDS_POOL["50000006"];
   const changes: Array<"up" | "new" | "same" | "down"> = [
     "up",
     "up",
@@ -251,7 +302,7 @@ export async function fetchNaverShoppingTrends(
     keyword: kw,
     categoryCode,
     categoryName: categoryMeta.name,
-    ratio: Number(Math.max(25, baseRatio - index * 4.8).toFixed(1)),
+    ratio: Number(Math.max(25, baseRatio - index * 4.2).toFixed(1)),
     change: changes[index % changes.length],
   }));
 
